@@ -31,3 +31,13 @@ Dividir seu código Python em microsserviços oferece mais flexibilidade. Por um
 Você também pode dimensionar cada microsserviço de forma independente. Neste tutorial, você usará um aplicativo Web e um microsserviço de Recomendações como exemplo em execução.
 
 Seu aplicativo da Web provavelmente será [I/O bound](https://en.wikipedia.org/wiki/I/O_bound), buscando dados de um banco de dados e talvez carregando modelos ou outros arquivos do disco. Um microsserviço de Recomendações pode estar fazendo muito processamento de números, tornando-o vinculado à [CPU bound](https://en.wikipedia.org/wiki/CPU-bound). Faz sentido executar esses dois microsserviços Python em hardware diferente.
+
+### Robustez
+
+Se todo o seu código estiver em um aplicativo, você precisará implantá-lo de uma só vez. Este é um grande risco! Isso significa que uma alteração em uma pequena parte do código pode derrubar todo o site.
+
+### Propriedade
+
+Quando uma única base de código é compartilhada por um grande número de pessoas, geralmente não há uma visão clara para a arquitetura do código. Isso é especialmente verdadeiro em grandes empresas, onde os funcionários vêm e vão. Pode haver pessoas que tenham uma visão de como o código deve ser, mas é difícil impor quando qualquer um pode modificá-lo e todos estão se movendo rapidamente.
+
+Um benefício dos microsserviços é que as equipes podem ter a propriedade clara de seu código. Isso torna mais provável que haja uma visão clara para o código e que o código permaneça limpo e organizado. Também deixa claro quem é responsável por adicionar recursos ao código ou fazer alterações quando algo dá errado.

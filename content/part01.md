@@ -23,3 +23,11 @@ Vários anos depois, o banco de dados de transações ficou muito grande e preci
 É por isso que ter todo o seu código em um único aplicativo pode ser perigoso a longo prazo. Às vezes é bom ter limites.
 
 O banco de dados de transações deve ser acessível apenas a um microsserviço de transações. Então, se você precisar dimensioná-lo, não é tão ruim. Outras partes do código podem interagir com transações por meio de uma API abstrata que oculta os detalhes da implementação. Você pode fazer isso em um único aplicativo - é menos provável que você faça. As mudanças de código geralmente seguem o caminho de menor resistência.
+
+### Flexibilidade
+
+Dividir seu código Python em microsserviços oferece mais flexibilidade. Por um lado, você pode escrever seus microsserviços em diferentes idiomas. Muitas vezes, o primeiro aplicativo da web de uma empresa será escrito em [Ruby](https://www.ruby-lang.org/en/about/) ou [PHP](https://www.php.net/manual/en/intro-whatis.php). Isso não significa que todo o resto também tem que ser!
+
+Você também pode dimensionar cada microsserviço de forma independente. Neste tutorial, você usará um aplicativo Web e um microsserviço de Recomendações como exemplo em execução.
+
+Seu aplicativo da Web provavelmente será [I/O bound](https://en.wikipedia.org/wiki/I/O_bound), buscando dados de um banco de dados e talvez carregando modelos ou outros arquivos do disco. Um microsserviço de Recomendações pode estar fazendo muito processamento de números, tornando-o vinculado à [CPU bound](https://en.wikipedia.org/wiki/CPU-bound). Faz sentido executar esses dois microsserviços Python em hardware diferente.

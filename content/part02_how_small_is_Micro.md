@@ -41,3 +41,37 @@ A implementação de microsserviços em Python provavelmente custará tempo e es
 O ciclo de inicialização típico do Vale do Silício é começar com um monólito para permitir uma iteração rápida à medida que a empresa encontra um produto adequado aos clientes. Depois que a empresa tiver um produto de sucesso e contratar mais engenheiros, é hora de começar a pensar em microsserviços. 
 
 `NOTA: Não os implemente cedo demais, mas não espere muito.`
+
+### Exemplo de microsserviços
+
+Nesta seção, você definirá alguns microsserviços para seu site Online Books For You. Você [definirá uma API](https://realpython.com/api-integration-in-python/) para eles e escreverá o código Python que os implementa como microsserviços à medida que avança neste tutorial.
+
+Para manter as coisas gerenciáveis, você definirá apenas dois microsserviços:
+
+&nbsp; &nbsp; 1. O Marketplace será um aplicativo web mínimo que exibe uma lista de livros para o usuário.
+
+&nbsp; &nbsp; 2. Recomendações será um microsserviço que fornece uma lista de livros nos quais o usuário pode estar interessado.
+
+Aqui está um diagrama que mostra como seu usuário interage com os microsserviços:
+
+![img-microsservice-schema](https://files.realpython.com/media/microservices.78daee973cc1.png)
+
+Você pode ver que o usuário irá interagir com o microsserviço do Marketplace por meio de seu navegador e o microsserviço do Marketplace irá interagir com o microsserviço de recomendações.
+
+Pense por um momento sobre a API de recomendações. Você deseja que a solicitação de recomendações tenha alguns recursos:
+
+&nbsp; &nbsp; ° **ID do usuário**: você pode usar isso para personalizar as recomendações. No entanto, para simplificar, todas as recomendações neste tutorial serão aleatórias.
+
+&nbsp; &nbsp; ° **Categoria de livro**: para tornar a API um pouco mais interessante, você adicionará categorias de livro, como mistério, autoajuda e assim por diante.
+
+&nbsp; &nbsp; ° **Resultados máximos**: você não quer devolver todos os livros em estoque, então você adicionará um limite à solicitação.
+
+A resposta será uma lista de livros. Cada livro terá os seguintes dados:
+
+&nbsp; &nbsp; ° **ID do livro**: um ID numérico exclusivo para o livro.
+
+&nbsp; &nbsp; ° **Título do livro**: o título que você pode exibir para o usuário.
+
+Um site real teria mais dados, mas você manterá o número de recursos limitado por causa deste exemplo.
+
+Agora você pode definir essa API de forma mais formal, na sintaxe de buffers de protocolo:

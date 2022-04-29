@@ -11,3 +11,19 @@ Os microsserviços são iguais. O escopo do código deve parecer correto. Nem mu
 Em segundo lugar, os microsserviços são mais difíceis de testar do que o código monolítico. Se um desenvolvedor quiser testar um recurso que abrange muitos microsserviços, ele precisará colocá-los em funcionamento em seu ambiente de desenvolvimento. Isso adiciona atrito. Não é tão ruim com alguns microsserviços, mas se forem dezenas, será um problema significativo.
 
 Acertar o tamanho do microsserviço é uma arte. Uma coisa a observar é que cada equipe deve possuir um número razoável de microsserviços. Se sua equipe tem cinco pessoas, mas vinte microsserviços, isso é uma bandeira vermelha. Por outro lado, se sua equipe trabalha em apenas um microsserviço que também é compartilhado por cinco outras equipes, isso também pode ser um problema.
+
+Aqui estão algumas maneiras de dividir sua hipotética livraria online em microsserviços:
+
+&nbsp; &nbsp; ° O **Marketplace** serve a lógica para o usuário navegar pelo site.
+
+&nbsp; &nbsp; ° O **Carrinho** acompanha o que o usuário colocou no carrinho e o fluxo de checkout.
+
+&nbsp; &nbsp; ° As **Transações** lidam com o processamento de pagamentos e o envio de recibos.
+
+&nbsp; &nbsp; ° O **Inventário** fornece dados sobre quais livros estão em estoque.
+
+&nbsp; &nbsp; ° A **Conta de Usuário** gerencia a inscrição do usuário e os detalhes da conta, como alterar a senha.
+
+&nbsp; &nbsp; ° **Comentários** armazenam classificações de livros e comentários inseridos pelos usuários.
+
+Estes são apenas alguns exemplos, não uma lista exaustiva. No entanto, você pode ver como cada um deles provavelmente pertenceria a sua própria equipe, e a lógica de cada um é relativamente independente. Além disso, se o microsserviço Reviews foi implantado com um bug que causou a falha, então o usuário ainda pode usar o site e fazer compras, apesar de as avaliações não carregarem.

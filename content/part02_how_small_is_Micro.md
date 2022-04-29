@@ -75,3 +75,48 @@ A resposta será uma lista de livros. Cada livro terá os seguintes dados:
 Um site real teria mais dados, mas você manterá o número de recursos limitado por causa deste exemplo.
 
 Agora você pode definir essa API de forma mais formal, na sintaxe de buffers de protocolo:
+
+```java
+syntax = "proto3";
+
+enum BookCategory {
+    MYSTERY = 0;
+    SCIENCE_FICTION = 1;
+    SELF_HELP = 2;
+}
+
+message RecommendationRequest {
+    int32 user_id = 1;
+    BookCategory category = 2;
+    int32 max_results = 3;
+}
+
+message BookRecommendation {
+    int32 id = 1;
+    string title = 2;
+}
+
+message RecommendationResponse {
+    repeated BookRecommendation recommendations = 1;
+}
+
+service Recommendations {
+    rpc Recommend (RecommendationRequest) returns (RecommendationResponse);
+}
+```
+
+Este arquivo de [buffer de protocolo](https://developers.google.com/protocol-buffers) declara sua API. Os buffers de protocolo foram desenvolvidos no Google e fornecem uma maneira de especificar formalmente uma API. Isso pode parecer um pouco enigmático no início, então aqui está um detalhamento linha por linha:
+
+&nbsp; &nbsp; ° A **linha 1** especifica que o arquivo usa a sintaxe proto3 em vez da versão proto2 mais antiga.
+
+&nbsp; &nbsp; ° As **linhas 3 a 7** definem as categorias do seu livro, e cada categoria também recebe um ID numérico.
+
+&nbsp; &nbsp; ° As **linhas 9 a 13** definem sua solicitação de API. Uma mensagem contém campos, cada um de um tipo específico. Você está usando `int32`, que é um inteiro de 32 bits, para os campos `user_ID` e `max_results`. Você também está usando a enumeração `BookCategory` que definiu acima como o tipo de `categoria`. Além de cada campo ter um nome, também é atribuído um ID de campo numérico. Você pode ignorar isso por enquanto.
+
+&nbsp; &nbsp; ° As **linhas 15 a 18** definem um novo tipo que você pode usar para uma recomendação de livro. Ele tem um ID inteiro de 32 bits e um título baseado em string.
+
+&nbsp; &nbsp; ° As **linhas 20 a 22** definem sua resposta de microsserviço de recomendações. Observe a palavra-chave repetida, que indica que a resposta realmente tem uma lista de objetos BookRecommendation.
+
+&nbsp; &nbsp; ° As **linhas 24 a 26** definem o método da API. Você pode pensar nisso como uma função ou um método em uma classe. Ele recebe um RecommendationRequest e retorna um RecommendationResponse.
+
+`RPC` significa `Remote Procedure Call`. Como você verá em breve, você pode chamar um RPC como uma função normal em Python. Mas a implementação do RPC é executada em outro servidor, o que o torna uma chamada de procedimento _remoto_.

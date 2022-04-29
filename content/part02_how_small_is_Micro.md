@@ -27,3 +27,17 @@ Aqui estão algumas maneiras de dividir sua hipotética livraria online em micro
 &nbsp; &nbsp; ° **Comentários** armazenam classificações de livros e comentários inseridos pelos usuários.
 
 Estes são apenas alguns exemplos, não uma lista exaustiva. No entanto, você pode ver como cada um deles provavelmente pertenceria a sua própria equipe, e a lógica de cada um é relativamente independente. Além disso, se o microsserviço Reviews foi implantado com um bug que causou a falha, então o usuário ainda pode usar o site e fazer compras, apesar de as avaliações não carregarem.
+
+### O trade-off microsserviço-monólito
+
+Os microsserviços nem sempre são melhores do que os monólitos que mantêm todo o seu código em um aplicativo. Geralmente, e especialmente no início de um ciclo de vida de desenvolvimento de software, os monólitos permitem que você se mova mais rapidamente. 
+
+Eles tornam menos complicado compartilhar código e adicionar funcionalidades, e ter que implantar apenas um serviço permite que você leve seu aplicativo aos usuários rapidamente.
+
+A desvantagem é que, à medida que a complexidade cresce, todas essas coisas podem gradualmente tornar o monólito mais difícil de desenvolver, mais lento de implantar e mais frágil. A implementação de um monólito provavelmente economizará tempo e esforço no início, mas pode voltar mais tarde para assombrá-lo.
+
+A implementação de microsserviços em Python provavelmente custará tempo e esforço a curto prazo, mas, se bem feita, pode configurar uma escala melhor a longo prazo. É claro que a implementação de microsserviços muito cedo pode diminuir a velocidade (e nessa etapa, velocidade é algo bem valioso).
+
+O ciclo de inicialização típico do Vale do Silício é começar com um monólito para permitir uma iteração rápida à medida que a empresa encontra um produto adequado aos clientes. Depois que a empresa tiver um produto de sucesso e contratar mais engenheiros, é hora de começar a pensar em microsserviços. 
+
+`NOTA: Não os implemente cedo demais, mas não espere muito.`

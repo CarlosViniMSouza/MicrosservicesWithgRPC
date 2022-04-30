@@ -25,3 +25,17 @@ A estrutura gRPC [geralmente é mais eficiente](https://www.yonego.com/nl/why-mi
 A configuração da conexão é relativamente lenta, portanto, fazer isso uma vez e compartilhar a conexão em várias solicitações economiza tempo. As mensagens gRPC também são binárias e menores que JSON. Além disso, o HTTP/2 possui compactação de cabeçalho integrada.
 
 O gRPC tem suporte integrado para solicitações e respostas de streaming. Ele gerenciará problemas de rede com mais facilidade do que uma conexão HTTP básica, reconectando-se automaticamente mesmo após longas desconexões. Ele também possui **interceptores**. Você pode até implementar plugins no código gerado, que as pessoas fizeram para produzir [dicas de tipo Python](https://realpython.com/python-type-checking/#hello-types).
+
+### Facilidade para desenvolvedores
+
+Provavelmente, a razão mais interessante pela qual muitas pessoas preferem gRPC em vez de REST é que você pode definir sua API em termos de [funções](https://realpython.com/defining-your-own-python-function/), não de verbos e recursos HTTP. 
+
+Como engenheiro, você está acostumado a pensar em termos de chamadas de função, e é exatamente assim que as APIs gRPC se parecem.
+
+A funcionalidade de mapeamento em uma API REST geralmente é complicada. Você precisa decidir quais são seus recursos, como construir caminhos e quais verbos usar. Muitas vezes, há várias opções, como aninhar recursos ou usar POST ou algum outro verbo. REST vs gRPC pode se transformar em um [debate sobre preferências](https://cloud.google.com/blog/products/api-management/understanding-grpc-openapi-and-rest-and-when-to-use-them). 
+
+Um nem sempre é melhor que o outro, então use o que melhor se adequar ao seu caso de uso.
+
+Estritamente falando, _buffers de protocolo_ referem-se ao formato de serialização de dados enviados entre dois microsserviços. Portanto, os buffers de protocolo são semelhantes a JSON ou XML, pois são formas de formatar dados. 
+
+Ao contrário do JSON, os buffers de protocolo têm um esquema estrito e são mais compactos quando enviados pela rede. Por outro lado, a infraestrutura RPC é, na verdade, chamada **gRPC**, ou Google RPC. Isso é mais parecido com HTTP. Na verdade, como mencionado acima, o gRPC é construído sobre HTTP/2.

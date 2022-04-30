@@ -1,5 +1,5 @@
 git init
 git add -A
-git commit -m "Next Sub-Step: Developer-Friendliness"
+git commit -m "Next Step: Example Implementation"
 git push -u origin main
 git status

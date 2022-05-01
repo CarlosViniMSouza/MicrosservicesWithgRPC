@@ -118,3 +118,44 @@ print(request.max_results)
 Aqui você obtém 0 porque esse é o valor padrão para campos int não definidos.
 
 Enquanto os protobufs fazem a verificação de tipos para você, você ainda precisa validar os valores reais. Portanto, ao implementar seu microsserviço de Recomendações, você deve validar se todos os campos possuem dados válidos. Isso é sempre verdade para qualquer servidor, independentemente de você usar protobufs, JSON, ou qualquer outra coisa. Sempre valide a entrada.
+
+O arquivo `recommendations_pb2.py` que foi gerado para você contém as definições de tipo. O arquivo `recommendations_pb2_grpc.py` contém a estrutura para um cliente e um servidor. Dê uma olhada nas importações necessárias para criar um cliente:
+
+```python
+import grpc
+from recommendations_pb2_grpc import RecommendationsStub
+```
+
+Você [importa](https://realpython.com/python-import/) o módulo `grpc`, que fornece algumas funções para configurar conexões com servidores remotos. Em seguida, você importa o stub do cliente RPC. É chamado de **stub** porque o próprio cliente não possui nenhuma funcionalidade. Ele chama um servidor remoto e passa o resultado de volta.
+
+Se você olhar para trás em sua definição de protobuf, verá a parte `service Recommendations` {...} no final. O compilador protobuf usa esse nome de microsserviço, Recommendations, e acrescenta `Stub` a ele para formar o nome do cliente, `RecommendationsStub`.
+
+Agora você pode fazer uma solicitação RPC:
+
+```python
+channel = grpc.insecure_channel("localhost:50051")
+client = RecommendationsStub(channel)
+
+request = RecommendationRequest(
+    user_id=1, category=BookCategory.SCIENCE_FICTION, max_results=3
+)
+
+print(client.Recommend(request))
+
+"""
+output:
+
+Traceback (most recent call last):
+  ...
+grpc._channel._InactiveRpcError: <_InactiveRpcError of RPC that terminated with:
+    status = StatusCode.UNAVAILABLE
+    details = "failed to connect to all addresses"
+    ...
+"""
+```
+
+Você cria uma conexão com localhost, sua própria máquina, na porta 50051. Essa porta é a porta padrão para gRPC, mas você pode alterá-la se desejar. Você usará um canal inseguro por enquanto, que não é autenticado e não criptografado, mas aprenderá a usar canais seguros posteriormente neste tutorial. Em seguida, você passa esse canal para seu stub para instanciar seu cliente.
+
+Agora você pode chamar o método de recomendação definido no microsserviço de recomendações. Pense na linha 25 da sua definição de protobuf: rpc `Recommend` (...) retorna (...). É daí que vem o método `Recommend`. Você receberá uma exceção porque não há nenhum microsserviço em execução em `localhost:50051`, então você implementará isso em seguida!
+
+Agora que você tem o cliente resolvido, você olhará para o lado do servidor.

@@ -68,3 +68,53 @@ que será usado para gerar o código Python.
 Olhe a pasta `recommendations`, você verá que 2 novos arquivos (`recommendations_pb2.py` `recommendations_pb2_grpc.py`) foram criados.
 
 Esses arquivos incluem tipos e funções do Python para interagir com sua API. O compilador gerará o código do cliente para chamar um RPC e o código do servidor para implementar o RPC. Você vai olhar para o lado do cliente primeiro.
+
+### O Cliente RPC
+
+O código gerado é algo que apenas uma placa-mãe poderia amar. Ou seja, não é um Python muito bonito. Isso ocorre porque não é realmente feito para ser lido por humanos. Abra um shell Python para ver como interagir com ele:
+
+```python
+from recommendations_pb2 import BookCategory, RecommendationRequest
+
+request = RecommendationRequest(
+    user_id=1, category=BookCategory.SCIENCE_FICTION, max_results=3
+)
+
+print(request.category)
+# output: 1
+```
+
+Você pode ver que o compilador protobuf gerou tipos Python correspondentes aos seus tipos protobuf. Até agora tudo bem. Você também pode ver que há algum tipo de verificação nos campos:
+
+```python
+request = RecommendationRequest(
+    user_id="oops", category=BookCategory.SCIENCE_FICTION, max_results=3
+)
+
+print(request.category)
+
+"""
+output:
+
+Traceback (most recent call last):
+  File "<stdin>", line 1, in <module>
+TypeError: 'oops' has type str, but expected one of: int, long
+"""
+```
+
+Isso mostra que você obtém um TypeError se passar o tipo errado para um de seus campos protobuf.
+
+Uma observação importante é que todos os campos no proto3 são opcionais, portanto, você precisará validar se todos estão definidos. Se você deixar um não definido, o padrão será zero para tipos numéricos ou uma string vazia para strings:
+
+```python
+request = RecommendationRequest(
+    user_id=1, category=BookCategory.SCIENCE_FICTION
+)
+
+print(request.max_results)
+# output: 0
+```
+
+Aqui você obtém 0 porque esse é o valor padrão para campos int não definidos.
+
+Enquanto os protobufs fazem a verificação de tipos para você, você ainda precisa validar os valores reais. Portanto, ao implementar seu microsserviço de Recomendações, você deve validar se todos os campos possuem dados válidos. Isso é sempre verdade para qualquer servidor, independentemente de você usar protobufs, JSON, ou qualquer outra coisa. Sempre valide a entrada.

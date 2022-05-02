@@ -243,3 +243,82 @@ Você criou uma classe com um método para implementar o `Recommend` RPC. Aqui e
 &nbsp; &nbsp; ° As **linhas 36 a 40** escolhem aleatoriamente alguns livros da categoria para recomendar. Certifique-se de limitar o número de recomendações a `max_results`. Você usa `min()` para garantir que você não peça mais livros do que existem, ou então `random.sample` apresentará um erro.
 
 &nbsp; &nbsp; ° A **linha 38** [retorna](https://realpython.com/python-return-statement/) um objeto `RecommendationResponse` com sua lista de recomendações de livros.
+
+Observe que seria melhor gerar uma [exceção em condições](https://realpython.com/python-exceptions/) de erro em vez de usar `abort()` como você faz neste exemplo, mas a resposta não definiria o código de status corretamente. Há uma maneira de contornar isso, que você verá mais tarde no tutorial quando observar os interceptores.
+
+A classe `RecommendationService` define sua implementação de microsserviço, mas você ainda precisa executá-la. É isso que `serve()` faz:
+
+```python
+def serve():
+    server = grpc.server(futures.ThreadPoolExecutor(max_workers=10))
+
+    recommendations_pb2_grpc.add_RecommendationsServicer_to_server(
+        RecommendationService(), server
+    )
+
+    server.add_insecure_port("[::]:50051")
+    server.start()
+    server.wait_for_termination()
+
+
+if __name__ == "__main__":
+    serve()
+```
+
+`serve()` inicia um servidor de rede e usa sua classe de microsserviço para lidar com solicitações:
+
+&nbsp; &nbsp; ° A **linha 42** cria um servidor gRPC. Você diz para usar 10 threads para atender solicitações, o que é um exagero total para esta demonstração, mas um bom padrão para um microsserviço Python real.
+
+&nbsp; &nbsp; ° A **linha 43** associa sua classe ao servidor. Isso é como adicionar um manipulador para solicitações.
+
+&nbsp; &nbsp; ° A **linha 46** diz ao servidor para executar na porta 50051. Como mencionado anteriormente, esta é a porta padrão para gRPC, mas você pode usar qualquer coisa que desejar.
+
+&nbsp; &nbsp; ° As **linhas 47 e 48** chamam `server.start()` e `server.wait_for_termination()` para iniciar o microsserviço e esperar até que ele seja interrompido. A única maneira de pará-lo neste caso é digitar `^ Ctrl` + `C` no terminal. Em um ambiente de produção, existem maneiras melhores de desligar, que você verá mais tarde.
+
+Sem fechar o terminal que você estava usando para testar o cliente, abra um novo terminal e execute o seguinte comando:
+
+```shell
+$ python recommendations.py
+```
+
+Isso executa o microsserviço Recomendações para que você possa testar o cliente em alguns dados reais. Agora retorne ao terminal que você estava usando para testar o cliente para que você possa criar o stub do canal. Se você deixou seu console aberto, pode pular as importações, mas elas são repetidas aqui como uma atualização:
+
+```python
+import grpc
+from recommendations_pb2_grpc import RecommendationsStub
+
+channel = grpc.insecure_channel("localhost:50051")
+client = RecommendationsStub(channel)
+```
+
+Agora que você tem um objeto cliente, você pode fazer uma solicitação:
+
+```python
+request = RecommendationRequest(
+   user_id=1, category=BookCategory.SCIENCE_FICTION, max_results=3)
+
+print(client.Recommend(request))
+
+"""
+output:
+
+recommendations {
+  id: 6
+  title: "The Dune Chronicles"
+}
+recommendations {
+  id: 4
+  title: "The Hitchhiker\'s Guide To The Galaxy"
+}
+recommendations {
+  id: 5
+  title: "Ender\'s Game"
+}
+"""
+```
+
+Funciona! Você fez uma solicitação de RPC ao seu microsserviço e obteve uma resposta! Observe que a saída que você vê pode ser diferente porque as recomendações são escolhidas aleatoriamente.
+
+Agora que você tem o servidor implementado, você pode implementar o microsserviço Marketplace e fazer com que ele chame o microsserviço Recomendações.
+
+Você pode fechar seu console Python agora, se quiser, mas deixe o microsserviço de recomendações em execução.

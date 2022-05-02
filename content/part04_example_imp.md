@@ -159,3 +159,87 @@ Você cria uma conexão com localhost, sua própria máquina, na porta 50051. Es
 Agora você pode chamar o método de recomendação definido no microsserviço de recomendações. Pense na linha 25 da sua definição de protobuf: rpc `Recommend` (...) retorna (...). É daí que vem o método `Recommend`. Você receberá uma exceção porque não há nenhum microsserviço em execução em `localhost:50051`, então você implementará isso em seguida!
 
 Agora que você tem o cliente resolvido, você olhará para o lado do servidor.
+
+### O servidor RPC
+
+Testar o cliente no console é uma coisa, mas implementar o servidor lá é um pouco demais. Você pode deixar seu console aberto, mas implementará o microsserviço em um arquivo.
+
+Comece com as importações e alguns dados:
+
+```python
+# recommendations/recommendations.py
+from concurrent import futures
+import random
+
+import grpc
+
+from recommendations_pb2 import (
+    BookCategory,
+    BookRecommendation,
+    RecommendationResponse,
+)
+import recommendations_pb2_grpc
+
+books_by_category = {
+    BookCategory.MYSTERY: [
+        BookRecommendation(id=1, title="The Maltese Falcon"),
+        BookRecommendation(id=2, title="Murder on the Orient Express"),
+        BookRecommendation(id=3, title="The Hound of the Baskervilles"),
+    ],
+    BookCategory.SCIENCE_FICTION: [
+        BookRecommendation(
+            id=4, title="The Hitchhiker's Guide to the Galaxy"
+        ),
+        BookRecommendation(id=5, title="Ender's Game"),
+        BookRecommendation(id=6, title="The Dune Chronicles"),
+    ],
+    BookCategory.SELF_HELP: [
+        BookRecommendation(
+            id=7, title="The 7 Habits of Highly Effective People"
+        ),
+        BookRecommendation(
+            id=8, title="How to Win Friends and Influence People"
+        ),
+        BookRecommendation(id=9, title="Man's Search for Meaning"),
+    ],
+}
+```
+
+Esse código importa suas dependências e cria alguns dados de exemplo. Aqui está um desdobramento:
+
+&nbsp; &nbsp; ° A **linha 2** importa futuros porque o gRPC precisa de um pool de threads. Você chegará a isso mais tarde.
+
+&nbsp; &nbsp; ° A **linha 3** importa aleatoriamente porque você selecionará livros aleatoriamente para recomendações.
+
+&nbsp; &nbsp; ° A **linha 14** cria o [dicionário](https://realpython.com/python-dicts/) `books_by_category`, em que as chaves são categorias de livros e os valores são [listas](https://realpython.com/python-lists-tuples/) de livros nessa categoria. Em um microsserviço de Recomendações real, os livros seriam armazenados em um banco de dados.
+
+Em seguida, você criará uma classe que implementa as funções de microsserviço:
+
+```python
+class RecommendationService(
+    recommendations_pb2_grpc.RecommendationsServicer
+):
+    def Recommend(self, request, context):
+        if request.category not in books_by_category:
+            context.abort(grpc.StatusCode.NOT_FOUND, "Category not found")
+
+        books_for_category = books_by_category[request.category]
+        num_results = min(request.max_results, len(books_for_category))
+        books_to_recommend = random.sample(
+            books_for_category, num_results
+        )
+
+        return RecommendationResponse(recommendations=books_to_recommend)
+```
+
+Você criou uma classe com um método para implementar o `Recommend` RPC. Aqui estão os detalhes:
+
+&nbsp; &nbsp; ° A **linha 29** define a classe `RecommendationService`. Esta é a implementação do seu microsserviço. Observe que você subclasse `RecommendationsServicer`. Isso faz parte da integração com o gRPC que você precisa fazer.
+
+&nbsp; &nbsp; ° A **linha 32** define um método `Recommend()` em sua classe. Isso deve ter o mesmo nome que o RPC que você define em seu arquivo protobuf. Ele também recebe um `RecommendationRequest` e retorna um `RecommendationResponse` assim como na definição do protobuf. Também recebe um parâmetro de `context`. O [`context`](https://grpc.github.io/grpc/python/grpc.html#grpc.ServicerContext) permite definir o código de status para a resposta.
+
+&nbsp; &nbsp; ° As **linhas 33 e 34** usam [abort()](https://grpc.github.io/grpc/python/grpc.html#grpc.ServicerContext.abort) para encerrar a solicitação e definir o código de status como `NOT_FOUND` se você obtiver uma categoria inesperada. Como o gRPC é construído sobre HTTP/2, o código de status é semelhante ao código de status HTTP padrão. A configuração permite que o cliente execute ações diferentes com base no código que recebe. Também permite middleware, como sistemas de monitoramento, para registrar quantas solicitações têm erros.
+
+&nbsp; &nbsp; ° As **linhas 36 a 40** escolhem aleatoriamente alguns livros da categoria para recomendar. Certifique-se de limitar o número de recomendações a `max_results`. Você usa `min()` para garantir que você não peça mais livros do que existem, ou então `random.sample` apresentará um erro.
+
+&nbsp; &nbsp; ° A **linha 38** [retorna](https://realpython.com/python-return-statement/) um objeto `RecommendationResponse` com sua lista de recomendações de livros.

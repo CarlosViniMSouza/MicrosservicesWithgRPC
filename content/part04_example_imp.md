@@ -350,3 +350,66 @@ Observe o novo diretório `marketplace/` para seu código de microsserviço, `re
 Você pode começar com o código do microsserviço. O microsserviço do Marketplace será um aplicativo [Flask](https://realpython.com/tutorials/flask/) para exibir uma página da Web para o usuário. Ele chamará o microsserviço de recomendações para obter recomendações de livros para exibir na página.
 
 Abra o arquivo `marketplace/marketplace.py` e adicione o seguinte:
+
+Você configura o Flask, cria um cliente gRPC e adiciona uma função para renderizar a página inicial. Aqui está um desdobramento:
+
+&nbsp; &nbsp; ° A **linha 10** cria um aplicativo Flask para renderizar uma página da Web para o usuário.
+
+&nbsp; &nbsp; ° As **linhas 12 a 16** criam seu canal gRPC e stub.
+
+&nbsp; &nbsp; ° As **linhas 20 a 30** criam render_homepage() para ser chamado quando o usuário visitar a página inicial do seu aplicativo. Ele retorna uma página HTML carregada de um modelo, com três recomendações de livros de ficção científica.
+
+Abra o arquivo `homepage.html` em seu diretório `marketplace/templates/` e adicione o seguinte HTML:
+
+```html
+<!-- homepage.html -->
+<!doctype html>
+<html lang="en">
+<head>
+    <title>Online Books For You</title>
+</head>
+<body>
+    <h1>Mystery books you may like</h1>
+    <ul>
+    {% for book in recommendations %}
+        <li>{{ book.title }}</li>
+    {% endfor %}
+    </ul>
+</body>
+```
+
+Esta é apenas uma página inicial de demonstração. Ele deve exibir uma lista de recomendações de livros quando você terminar.
+
+Para executar esse código, você precisará das seguintes dependências, que podem ser adicionadas ao `marketplace/requirements.txt`:
+
+```text
+flask ~= 1.1
+grpcio-tools ~= 1.30
+Jinja2 ~= 2.11
+pytest ~= 5.4
+```
+
+Os microsserviços `Recommendations` e `Marketplace` terão seus próprios `requirements.txt`, mas por conveniência neste tutorial, você pode usar o mesmo ambiente virtual para ambos. Execute o seguinte para atualizar seu ambiente virtual:
+
+```shell
+$ python -m pip install -r marketplace/requirements.txt
+```
+
+Para executar seu microsserviço do Marketplace, digite o seguinte em seu console:
+
+```shell
+FLASK_APP=marketplace.py flask run
+```
+
+Agora você deve ter os microsserviços de Recomendações e Marketplace em execução em dois consoles separados. Se você desligar o microsserviço de recomendações, reinicie-o em outro console com o seguinte (em um terminal shell de Linux/MacOS):
+
+```shell
+$ cd recommendations
+$ python recommendations.py
+```
+
+Isso executa seu aplicativo Flask, que é executado por padrão na porta 5000. Vá em frente e abra-o no seu navegador e confira!
+
+Agora você tem dois microsserviços conversando entre si! Mas eles ainda estão apenas na sua máquina de desenvolvimento. Em seguida, você aprenderá como colocá-los em um ambiente de produção.
+
+Você pode interromper seus microsserviços Python digitando `^Ctrl`+ `C` no terminal em que eles estão sendo executados. Você os executará no [Docker](https://realpython.com/docker-in-action-fitter-happier-more-productive/) a seguir, que é como eles serão executados em um ambiente de produção.

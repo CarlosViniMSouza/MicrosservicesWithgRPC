@@ -395,6 +395,14 @@ Os microsserviços `Recommendations` e `Marketplace` terão seus próprios `requ
 $ python -m pip install -r marketplace/requirements.txt
 ```
 
+Agora que você instalou as dependências, você também precisa gerar código para seus protobufs no diretório `marketplace/`. Para fazer isso, execute o seguinte em um console (em um terminal shell de Linux/MacOS):
+
+```shell
+$ cd marketplace
+$ python -m grpc_tools.protoc -I ../protobufs --python_out=. \
+         --grpc_python_out=. ../protobufs/recommendations.proto
+```
+
 Para executar seu microsserviço do Marketplace, digite o seguinte em seu console:
 
 ```shell

@@ -1,5 +1,4 @@
-git init
 git add -A
-git commit -m "add code recommendations.py -> (i forgot last week)"
+git commit -m "add project marketplace (now, add content reference)"
 git push -u origin main
 git status

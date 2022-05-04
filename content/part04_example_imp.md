@@ -322,3 +322,31 @@ Funciona! Você fez uma solicitação de RPC ao seu microsserviço e obteve uma 
 Agora que você tem o servidor implementado, você pode implementar o microsserviço Marketplace e fazer com que ele chame o microsserviço Recomendações.
 
 Você pode fechar seu console Python agora, se quiser, mas deixe o microsserviço de recomendações em execução.
+
+### Amarrando-o junto
+
+Crie um novo diretório marketplace/ e coloque um arquivo marketplace.py nele para o microsserviço do Marketplace. Sua árvore de diretórios agora deve ficar assim:
+
+```
+.
+├── marketplace/
+│   ├── marketplace.py
+│   ├── requirements.txt
+│   └── templates/
+│       └── homepage.html
+|
+├── protobufs/
+│   └── recommendations.proto
+|
+└── recommendations/
+    ├── recommendations.py
+    ├── recommendations_pb2.py
+    ├── recommendations_pb2_grpc.py
+    └── requirements.txt
+```
+
+Observe o novo diretório `marketplace/` para seu código de microsserviço, `requirements.txt` e uma página inicial. Todos serão descritos a seguir. Você pode criar arquivos vazios para eles por enquanto e preenchê-los mais tarde.
+
+Você pode começar com o código do microsserviço. O microsserviço do Marketplace será um aplicativo [Flask](https://realpython.com/tutorials/flask/) para exibir uma página da Web para o usuário. Ele chamará o microsserviço de recomendações para obter recomendações de livros para exibir na página.
+
+Abra o arquivo `marketplace/marketplace.py` e adicione o seguinte:

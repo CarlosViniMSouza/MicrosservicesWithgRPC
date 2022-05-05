@@ -350,3 +350,75 @@ Veja o que está acontecendo no código:
 &nbsp; &nbsp; ° A **linha 20** é a imagem do Docker a ser implantada. Você deve usar uma imagem do Docker em um registro de imagem. Para obter sua imagem lá, você deve enviá-la para o registro de imagem. Há instruções sobre como fazer isso ao fazer login em sua conta no Docker Hub.
 
 A implantação do microsserviço de recomendações é muito semelhante:
+
+```yaml
+---
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+    name: recommendations
+    labels:
+        app: recommendations
+spec:
+    replicas: 3
+    selector:
+        matchLabels:
+            app: recommendations
+    template:
+        metadata:
+            labels:
+                app: recommendations
+        spec:
+            containers:
+                - name: recommendations
+                  image: hidan/python-microservices-article-recommendations:0.1
+```
+
+A principal diferença é que um usa o nome marketplace e o outro usa `recommendations`. Você também define a variável de ambiente `RECOMMENDATIONS_HOST` na implantação do `marketplace`, mas não na implantação de `recommendations`.
+
+Em seguida, você define um **serviço** para o microsserviço de recomendações. Enquanto uma implantação informa ao Kubernetes como implantar seu código, um serviço informa como rotear solicitações para ele. Para evitar confusão com o termo _serviço_ que é comumente usado para falar sobre microsserviços, você verá a palavra em maiúscula quando usada em referência a um Serviço Kubernetes.
+
+Aqui está a definição de serviço para `recommendations`:
+
+```yaml
+---
+apiVersion: v1
+kind: Service
+metadata:
+    name: recommendations
+spec:
+    selector:
+        app: recommendations
+    ports:
+        - protocol: TCP
+          port: 50051
+          targetPort: 50051
+```
+
+Aqui está o que está acontecendo na definição:
+
+&nbsp; &nbsp; ° **Linha 48**: Quando você cria um serviço, o Kubernetes cria essencialmente um nome de host DNS com o mesmo nome dentro do cluster. Assim, qualquer microsserviço em seu cluster pode enviar uma solicitação para recomendações. O Kubernetes encaminhará essa solicitação para um dos pods em sua implantação.
+
+&nbsp; &nbsp; ° **Linha 51**: Esta linha conecta o Serviço ao Deployment. Ele instrui o Kubernetes a encaminhar solicitações de recomendações para um dos pods na implantação de recomendações. Isso deve corresponder a um dos pares de chave-valor nos rótulos da implantação.
+
+O serviço do `marketplace` é semelhante:
+
+```yaml
+---
+apiVersion: v1
+kind: Service
+metadata:
+    name: marketplace
+spec:
+    type: LoadBalancer
+    selector:
+        app: marketplace
+    ports:
+        - protocol: TCP
+          port: 5000
+          targetPort: 5000
+```
+
+Além dos nomes e portas, há apenas uma diferença. Você notará esse tipo: LoadBalancer aparece apenas no Marketplace Service. Isso ocorre porque o marketplace precisa ser acessível de fora do cluster Kubernetes, enquanto as recomendações só precisam ser acessíveis dentro do cluster.
+
+Agora que você tem uma configuração do Kubernetes, sua próxima etapa é implantá-la!

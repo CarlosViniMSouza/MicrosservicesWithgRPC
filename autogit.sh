@@ -1,4 +1,4 @@
 git add -A
-git commit -m "Next Sub-Step: Deploying to Kubernetes (Part3) | (added kubernetes.yaml in recommendations folder)"
+git commit -m "Next Step: Python Microservice Monitoring With Interceptors | (Time on project -> Because I need to study OOP in Python)"
 git push -u origin main
 git status

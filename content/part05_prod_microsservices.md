@@ -246,3 +246,51 @@ Quando isso estiver em execução, você poderá novamente abrir `localhost:5000
 Observe que você não precisa expor 50051 no contêiner de `recommendations` quando estiver na mesma rede que o microsserviço do Marketplace, portanto, você pode descartar essa parte.
 
 Se você quiser parar o docker-compose para fazer algumas edições antes de subir, pressione `^Ctrl` + `C`.
+
+### Teste
+
+Para [testar a unidade](https://realpython.com/python-testing/) do microsserviço Python, você pode instanciar sua classe de microsserviço e chamar seus métodos. Aqui está um teste de exemplo básico para sua implementação de `RecommendationService`:
+
+```python
+# recommendations/recommendations_test.py
+from recommendations import RecommendationService
+
+from recommendations_pb2 import BookCategory, RecommendationRequest
+
+def test_recommendations():
+    service = RecommendationService()
+    request = RecommendationRequest(
+        user_id=1, category=BookCategory.MYSTERY, max_results=1
+    )
+    response = service.Recommend(request, None)
+    assert len(response.recommendations) == 1
+```
+
+Aqui está um desdobramento:
+
+&nbsp; &nbsp; ° A **linha 6** instancia a classe como qualquer outra e chama métodos nela.
+
+&nbsp; &nbsp; ° A **linha 11** passa [None](https://realpython.com/null-in-python/) para o contexto, que funciona desde que você não a use. Se você quiser testar caminhos de código que usam o contexto, poderá zombar dele.
+
+O teste de integração envolve a execução de testes automatizados com vários microsserviços não simulados. Então é um pouco mais complicado, mas não é muito difícil. Adicione um arquivo `marketplace/marketplace_integration_test.py`:
+
+```python
+from urllib.request import urlopen
+
+def test_render_homepage():
+    homepage_html = urlopen("http://localhost:5000").read().decode("utf-8")
+    assert "<title>Online Books For You</title>" in homepage_html
+    assert homepage_html.count("<li>") == 3
+```
+
+Isso faz uma solicitação HTTP para o URL da página inicial e verifica se ele retorna algum HTML com um título e três elementos de marcador `<li>` nele. Este não é o melhor teste, pois não seria muito sustentável se a página tivesse mais, mas demonstra um ponto. Esse teste será aprovado somente se o microsserviço de recomendações estiver funcionando. Você também pode testar o microsserviço do Marketplace fazendo uma solicitação HTTP para ele.
+
+Então, como você executa esse tipo de teste? Felizmente, as boas pessoas do Docker também forneceram uma maneira de fazer isso. Depois de executar seus microsserviços Python com `docker-compose`, você pode executar comandos dentro deles com `docker-compose exec`. Então, se você quiser executar seu teste de integração dentro do contêiner do `marketplace`, você pode executar o seguinte comando:
+
+```shell
+$ docker-compose build
+$ docker-compose up
+$ docker-compose exec marketplace pytest marketplace_integration_test.py
+```
+
+Isso executa o comando pytest dentro do contêiner do `marketplace`. Como seu teste de integração se conecta ao `localhost`, você precisa executá-lo no mesmo contêiner que o microsserviço.

@@ -86,3 +86,46 @@ Você não verá nenhuma saída, mas seu microsserviço de recomendações agora
 A opção `-p 127.0.0.1:50051:50051/tcp` diz ao Docker para encaminhar [conexões TCP](https://en.wikipedia.org/wiki/Transmission_Control_Protocol) na porta `50051` em sua máquina para a porta `50051` dentro do contêiner. Isso lhe dá a flexibilidade de encaminhar diferentes portas em sua máquina.
 
 Por exemplo, se você estiver executando dois contêineres que executam microsserviços Python na porta `50051`, precisará usar duas portas diferentes em sua máquina host. Isso ocorre porque dois processos não podem abrir a mesma porta ao mesmo tempo, a menos que estejam em contêineres separados.
+
+### -> Dockerfile do Marketplace
+
+Em seguida, você criará sua imagem do Marketplace. Crie `marketplace/Dockerfile` e adicione o seguinte:
+
+```Dockerfile
+FROM python
+
+RUN mkdir /service
+COPY protobufs/ /service/protobufs/
+COPY marketplace/ /service/marketplace/
+WORKDIR /service/marketplace
+RUN python -m pip install --upgrade pip
+RUN python -m pip install -r requirements.txt
+RUN python -m grpc_tools.protoc -I ../protobufs --python_out=. \
+           --grpc_python_out=. ../protobufs/recommendations.proto
+
+EXPOSE 5000
+ENV FLASK_APP=marketplace.py
+ENTRYPOINT [ "flask", "run", "--host=0.0.0.0"]
+```
+
+Isso é muito semelhante ao Dockerfile de recomendações, com algumas diferenças:
+
+&nbsp; &nbsp; ° A **linha 13** usa `ENV FLASK_APP=marketplace.py` para definir a variável de ambiente FLASK_APP dentro da imagem. Flask precisa disso para funcionar.
+
+&nbsp; &nbsp; ° A **linha 14** adiciona `--host=0.0.0.0` ao comando `flask run`. Se você não adicionar isso, o Flask só aceitará conexões do localhost.
+
+Mas espere, você ainda não está executando tudo no localhost? Bem, na verdade não. Quando você executa um contêiner do Docker, ele é isolado de sua máquina host por padrão. localhost dentro do container é diferente de localhost fora, mesmo na mesma máquina. É por isso que você precisa dizer ao Flask para aceitar conexões de qualquer lugar.
+
+Vá em frente e abra um novo terminal. Você pode criar sua imagem do Marketplace com este comando:
+
+```shell
+$ docker build . -f marketplace/Dockerfile -t marketplace
+```
+
+Isso cria a imagem do Marketplace. Agora você pode executá-lo em um contêiner com este comando:
+
+```shell
+$ docker run -p 127.0.0.1:5000:5000/tcp marketplace
+```
+
+Você não verá nenhuma saída, mas seu microsserviço do Marketplace agora está em execução.

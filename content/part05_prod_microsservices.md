@@ -129,3 +129,25 @@ $ docker run -p 127.0.0.1:5000:5000/tcp marketplace
 ```
 
 Você não verá nenhuma saída, mas seu microsserviço do Marketplace agora está em execução.
+
+### Rede
+
+Infelizmente, mesmo que seus contêineres de Recomendações e Marketplace estejam em execução, se você acessar `http://localhost:5000` em seu navegador, receberá um erro. Você pode se conectar ao seu microsserviço do Marketplace, mas ele não pode mais se conectar ao microsserviço de recomendações. Os contêineres são isolados.
+
+Felizmente, o Docker fornece uma solução para isso. Você pode criar uma rede virtual e adicionar os dois contêineres a ela. Você também pode fornecer nomes DNS para que eles possam se encontrar.
+
+Abaixo, você criará uma rede chamada `microsserviços` e executará o microsserviço Recomendações nela. Você também fornecerá as `recommendations` de nome DNS. Primeiro, pare os contêineres atualmente em execução com `^Ctrl` + `C`. Em seguida, execute o seguinte:
+
+```shell
+$ docker network create microservices
+$ docker run -p 127.0.0.1:50051:50051/tcp --network microservices \
+             --name recommendations recommendations
+```
+
+O comando `docker network create` cria a rede. Você só precisa fazer isso uma vez e, em seguida, pode conectar vários contêineres a ele. Em seguida, você adiciona `‑‑network microservices` ao comando `docker run` para iniciar o contêiner nessa rede. A opção de `‑‑name recommendations` fornece as `recommendations` do DNS.
+
+Antes de reiniciar o contêiner do marketplace, você precisa alterar o código. Isso ocorre porque você codificou `localhost:50051` nesta linha de `marketplace.py`:
+
+```python
+recommendations_channel = grpc.insecure_channel("localhost:50051")
+```

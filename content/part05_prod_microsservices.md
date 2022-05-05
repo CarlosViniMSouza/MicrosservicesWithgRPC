@@ -294,3 +294,49 @@ $ docker-compose exec marketplace pytest marketplace_integration_test.py
 ```
 
 Isso executa o comando pytest dentro do contêiner do `marketplace`. Como seu teste de integração se conecta ao `localhost`, você precisa executá-lo no mesmo contêiner que o microsserviço.
+
+### Deploy no Kubernetes
+
+Excelente! Agora você tem alguns microsserviços em execução no seu computador. Você pode ativá-los rapidamente e executar testes de integração em ambos. Mas você precisa colocá-los em um ambiente de produção. Para isso, você usará o [Kubernetes](https://kubernetes.io/docs/concepts/overview/what-is-kubernetes/).
+
+Este tutorial não se aprofunda no Kubernetes porque é um tópico grande, e documentação e tutoriais abrangentes estão disponíveis em outros lugares. No entanto, nesta seção, você encontrará o básico para levar seus microsserviços Python a um cluster Kubernetes na nuvem.
+
+### -> Configurações do Kubernetes
+
+Você pode começar com uma configuração mínima do Kubernetes em `kubernetes.yaml`. O arquivo completo é um pouco longo, mas consiste em quatro seções distintas, então você verá uma a uma:
+
+```yaml
+---
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+    name: marketplace
+    labels:
+        app: marketplace
+spec:
+    replicas: 3
+    selector:
+        matchLabels:
+            app: marketplace
+    template:
+        metadata:
+            labels:
+                app: marketplace
+        spec:
+            containers:
+                - name: marketplace
+                  image: hidan/python-microservices-article-marketplace:0.1
+                  env:
+                      - name: RECOMMENDATIONS_HOST
+                        value: recommendations
+```
+
+Isso define uma **Implantação** para o microsserviço do Marketplace. Uma [Implantação](https://kubernetes.io/docs/concepts/workloads/controllers/deployment/) informa ao Kubernetes como implantar seu código. O Kubernetes precisa de quatro informações principais:
+
+1. Qual imagem do Docker implantar
+
+2. Quantas instâncias implantar
+
+3. Quais variáveis ​​de ambiente os microsserviços precisam
+
+4. Como identificar seu microsserviço

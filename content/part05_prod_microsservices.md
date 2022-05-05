@@ -136,7 +136,7 @@ Infelizmente, mesmo que seus contêineres de Recomendações e Marketplace estej
 
 Felizmente, o Docker fornece uma solução para isso. Você pode criar uma rede virtual e adicionar os dois contêineres a ela. Você também pode fornecer nomes DNS para que eles possam se encontrar.
 
-Abaixo, você criará uma rede chamada `microsserviços` e executará o microsserviço Recomendações nela. Você também fornecerá as `recommendations` de nome DNS. Primeiro, pare os contêineres atualmente em execução com `^Ctrl` + `C`. Em seguida, execute o seguinte:
+Abaixo, você criará uma rede chamada `microservices` e executará o microsserviço Recomendações nela. Você também fornecerá as `recommendations` de nome DNS. Primeiro, pare os contêineres atualmente em execução com `^Ctrl` + `C`. Em seguida, execute o seguinte:
 
 ```shell
 $ docker network create microservices
@@ -151,3 +151,30 @@ Antes de reiniciar o contêiner do marketplace, você precisa alterar o código.
 ```python
 recommendations_channel = grpc.insecure_channel("localhost:50051")
 ```
+
+Agora você deseja se conectar a `recommendations:50051`. Mas em vez de codificá-lo novamente, você pode carregá-lo de uma variável de ambiente. Substitua a linha acima pelas duas seguintes:
+
+```python
+recommendations_host = os.getenv("RECOMMENDATIONS_HOST", "localhost")
+recommendations_channel = grpc.insecure_channel(
+    f"{recommendations_host}:50051"
+)
+```
+
+Isso carrega o nome do host do microsserviço de recomendações na variável de ambiente `RECOMMENDATIONS_HOST`. Se não estiver definido, você pode padronizá-lo para `localhost`. Isso permite que você execute o mesmo código diretamente em sua máquina ou dentro de um contêiner.
+
+Você precisará reconstruir a imagem do mercado desde que alterou o código. Em seguida, tente executá-lo em sua rede:
+
+```shell
+$ docker build . -f marketplace/Dockerfile -t marketplace
+$ docker run -p 127.0.0.1:5000:5000/tcp --network microservices \
+             -e RECOMMENDATIONS_HOST=recommendations marketplace
+```
+
+Isso é semelhante a como você o executou antes, mas com duas diferenças:
+
+&nbsp; &nbsp; 1. Você adicionou a opção `‑‑network microservices` para executá-lo na mesma rede que seu microsserviço de recomendações. Você não adicionou uma opção ‑‑name porque, diferentemente do microsserviço de Recomendações, nada precisa procurar o endereço IP do microsserviço do Marketplace. O encaminhamento de porta fornecido por `-p 127.0.0.1:5000:5000/tcp` é suficiente e não precisa de um nome DNS.
+
+&nbsp; &nbsp; 2. Você adicionou `-e RECOMMENDATIONS_HOST=recommendations`, que define a variável de ambiente dentro do contêiner. É assim que você passa o nome do host do microsserviço de recomendações para seu código.
+
+Neste ponto, você pode tentar `localhost:5000` em seu navegador mais uma vez, e ele deve ser carregado corretamente. Huzá!

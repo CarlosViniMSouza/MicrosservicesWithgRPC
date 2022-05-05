@@ -54,7 +54,7 @@ Para manter as coisas gerenciáveis, você definirá apenas dois microsserviços
 
 Aqui está um diagrama que mostra como seu usuário interage com os microsserviços:
 
-![img-microsservice-schema](https://files.realpython.com/media/microservices.78daee973cc1.png)
+![img-microservice-schema](https://files.realpython.com/media/microservices.78daee973cc1.png)
 
 Você pode ver que o usuário irá interagir com o microsserviço do Marketplace por meio de seu navegador e o microsserviço do Marketplace irá interagir com o microsserviço de recomendações.
 

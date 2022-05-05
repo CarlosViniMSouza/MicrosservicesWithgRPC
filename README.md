@@ -11,7 +11,7 @@ Table of Contents
   ° Robustness
   ° Ownership
 
-° How Small Is “Micro”?
+° How Small Is "Micro"?
   ° The Microservice-Monolith Trade-Off
   ° Example Microservices
 

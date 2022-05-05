@@ -178,3 +178,71 @@ Isso é semelhante a como você o executou antes, mas com duas diferenças:
 &nbsp; &nbsp; 2. Você adicionou `-e RECOMMENDATIONS_HOST=recommendations`, que define a variável de ambiente dentro do contêiner. É assim que você passa o nome do host do microsserviço de recomendações para seu código.
 
 Neste ponto, você pode tentar `localhost:5000` em seu navegador mais uma vez, e ele deve ser carregado corretamente. Huzá!
+
+### Docker Compose
+
+É incrível que você possa fazer tudo isso com o Docker, mas é um pouco tedioso. Seria bom se houvesse um único comando que você pudesse executar para iniciar todos os seus contêineres. Felizmente existe! Chama-se `docker-compose` e faz parte do projeto Docker.
+
+Em vez de executar vários comandos para criar imagens, criar redes, e executar contêineres, você pode declarar seus microsserviços em um arquivo YAML:
+
+```yaml
+version: "3.8"
+services:
+
+    marketplace:
+        build:
+            context: .
+            dockerfile: marketplace/Dockerfile
+        environment:
+            RECOMMENDATIONS_HOST: recommendations
+        image: marketplace
+        networks:
+            - microservices
+        ports:
+            - 5000:5000
+
+    recommendations:
+        build:
+            context: .
+            dockerfile: recommendations/Dockerfile
+        image: recommendations
+        networks:
+            - microservices
+
+networks:
+    microservices:
+```
+
+Normalmente, você coloca isso em um arquivo chamado `docker-compose.yaml`. Coloque isso na raiz do seu projeto:
+
+```
+.
+├── marketplace/
+│   ├── marketplace.py
+│   ├── requirements.txt
+│   └── templates/
+│       └── homepage.html
+|
+├── protobufs/
+│   └── recommendations.proto
+|
+├── recommendations/
+│   ├── recommendations.py
+│   ├── recommendations_pb2.py
+│   ├── recommendations_pb2_grpc.py
+│   └── requirements.txt
+│
+└── docker-compose.yaml
+```
+
+Este tutorial não entrará em muitos detalhes sobre a sintaxe, pois está bem documentado em outro lugar. Ele realmente faz a mesma coisa que você já fez manualmente. No entanto, agora você só precisa executar um único comando para abrir sua rede e contêineres:
+
+```shell
+$ docker-compose up
+```
+
+Quando isso estiver em execução, você poderá novamente abrir `localhost:5000` em seu navegador e tudo deverá funcionar perfeitamente.
+
+Observe que você não precisa expor 50051 no contêiner de `recommendations` quando estiver na mesma rede que o microsserviço do Marketplace, portanto, você pode descartar essa parte.
+
+Se você quiser parar o docker-compose para fazer algumas edições antes de subir, pressione `^Ctrl` + `C`.

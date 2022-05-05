@@ -51,3 +51,38 @@ Aqui está um passo a passo linha por linha:
 &nbsp; &nbsp; ° A **linha 8** diz ao Docker para executar `pip install -r requirements.txt` dentro da imagem. Isso adicionará todos os arquivos `grpcio-tools` e quaisquer outros pacotes que você possa adicionar à imagem. Observe que você não está usando um ambiente virtual porque é desnecessário. A única coisa em execução nesta imagem será seu microsserviço, para que você não precise isolar ainda mais seu ambiente.
 
 &nbsp; &nbsp; ° A linha 9 executa o comando python -m grpc_tools.protoc para gerar os arquivos Python a partir do arquivo protobuf. Seu diretório /service dentro da imagem agora se parece com isso:
+
+```
+/service/
+|
+├── protobufs/
+│   └── recommendations.proto
+|
+└── recommendations/
+    ├── recommendations.py
+    ├── recommendations_pb2.py
+    ├── recommendations_pb2_grpc.py
+    └── requirements.txt
+```
+
+&nbsp; &nbsp; ° A **linha 12** informa ao Docker que você executará um microsserviço na porta 50051 e deseja expor isso fora da imagem.
+
+&nbsp; &nbsp; ° A **linha 13** informa ao Docker como executar seu microsserviço.
+
+Agora você pode gerar uma imagem do Docker a partir do seu Dockerfile. Execute o seguinte comando no diretório que contém todo o seu código, não dentro do diretório `recommendations/`, mas um nível acima dele:
+
+```shell
+$ docker build . -f recommendations/Dockerfile -t recommendations
+```
+
+Isso criará a imagem do Docker para o microsserviço de Recommendations. Você deve ver alguma saída à medida que o Docker cria a imagem. Agora você pode executá-lo:
+
+```shell
+$ docker run -p 127.0.0.1:50051:50051/tcp recommendations
+```
+
+Você não verá nenhuma saída, mas seu microsserviço de recomendações agora está sendo executado dentro de um contêiner do Docker. Ao executar uma imagem, você obtém um contêiner. Você pode executar a imagem várias vezes para obter vários contêineres, mas ainda há apenas uma imagem.
+
+A opção `-p 127.0.0.1:50051:50051/tcp` diz ao Docker para encaminhar [conexões TCP](https://en.wikipedia.org/wiki/Transmission_Control_Protocol) na porta `50051` em sua máquina para a porta `50051` dentro do contêiner. Isso lhe dá a flexibilidade de encaminhar diferentes portas em sua máquina.
+
+Por exemplo, se você estiver executando dois contêineres que executam microsserviços Python na porta `50051`, precisará usar duas portas diferentes em sua máquina host. Isso ocorre porque dois processos não podem abrir a mesma porta ao mesmo tempo, a menos que estejam em contêineres separados.

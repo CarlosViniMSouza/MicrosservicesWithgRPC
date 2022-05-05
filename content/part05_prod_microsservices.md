@@ -50,7 +50,7 @@ Aqui está um passo a passo linha por linha:
 
 &nbsp; &nbsp; ° A **linha 8** diz ao Docker para executar `pip install -r requirements.txt` dentro da imagem. Isso adicionará todos os arquivos `grpcio-tools` e quaisquer outros pacotes que você possa adicionar à imagem. Observe que você não está usando um ambiente virtual porque é desnecessário. A única coisa em execução nesta imagem será seu microsserviço, para que você não precise isolar ainda mais seu ambiente.
 
-&nbsp; &nbsp; ° A linha 9 executa o comando python -m grpc_tools.protoc para gerar os arquivos Python a partir do arquivo protobuf. Seu diretório /service dentro da imagem agora se parece com isso:
+&nbsp; &nbsp; ° A **linha 9** executa o comando python -m grpc_tools.protoc para gerar os arquivos Python a partir do arquivo protobuf. Seu diretório `/service` dentro da imagem agora se parece com isso:
 
 ```
 /service/
@@ -173,9 +173,9 @@ $ docker run -p 127.0.0.1:5000:5000/tcp --network microservices \
 
 Isso é semelhante a como você o executou antes, mas com duas diferenças:
 
-&nbsp; &nbsp; 1. Você adicionou a opção `‑‑network microservices` para executá-lo na mesma rede que seu microsserviço de recomendações. Você não adicionou uma opção ‑‑name porque, diferentemente do microsserviço de Recomendações, nada precisa procurar o endereço IP do microsserviço do Marketplace. O encaminhamento de porta fornecido por `-p 127.0.0.1:5000:5000/tcp` é suficiente e não precisa de um nome DNS.
+1. Você adicionou a opção `‑‑network microservices` para executá-lo na mesma rede que seu microsserviço de recomendações. Você não adicionou uma opção ‑‑name porque, diferentemente do microsserviço de Recomendações, nada precisa procurar o endereço IP do microsserviço do Marketplace. O encaminhamento de porta fornecido por `-p 127.0.0.1:5000:5000/tcp` é suficiente e não precisa de um nome DNS.
 
-&nbsp; &nbsp; 2. Você adicionou `-e RECOMMENDATIONS_HOST=recommendations`, que define a variável de ambiente dentro do contêiner. É assim que você passa o nome do host do microsserviço de recomendações para seu código.
+2. Você adicionou `-e RECOMMENDATIONS_HOST=recommendations`, que define a variável de ambiente dentro do contêiner. É assim que você passa o nome do host do microsserviço de recomendações para seu código.
 
 Neste ponto, você pode tentar `localhost:5000` em seu navegador mais uma vez, e ele deve ser carregado corretamente. Huzá!
 
@@ -340,3 +340,13 @@ Isso define uma **Implantação** para o microsserviço do Marketplace. Uma [Imp
 3. Quais variáveis ​​de ambiente os microsserviços precisam
 
 4. Como identificar seu microsserviço
+
+Você pode informar ao Kubernetes como identificar seu microsserviço usando **rótulos**. Embora não seja mostrado aqui, você também pode informar ao Kubernetes quais recursos de memória e CPU seu microsserviço precisa. Você pode encontrar muitas outras opções na [documentação do Kubernetes](https://kubernetes.io/docs/home/).
+
+Veja o que está acontecendo no código:
+
+&nbsp; &nbsp; ° A **linha 9** informa ao Kubernetes quantos pods devem ser criados para seu microsserviço. Um **pod** é basicamente um ambiente de execução isolado, como uma máquina virtual leve implementada como um conjunto de contêineres. A configuração de `replicas: 3` oferece três pods para cada microsserviço. Ter mais de um permite redundância, permitindo atualizações contínuas sem tempo de inatividade, dimensionar conforme você precisa de mais máquinas e ter `failovers`, caso um fique inativo.
+
+&nbsp; &nbsp; ° A **linha 20** é a imagem do Docker a ser implantada. Você deve usar uma imagem do Docker em um registro de imagem. Para obter sua imagem lá, você deve enviá-la para o registro de imagem. Há instruções sobre como fazer isso ao fazer login em sua conta no Docker Hub.
+
+A implantação do microsserviço de recomendações é muito semelhante:

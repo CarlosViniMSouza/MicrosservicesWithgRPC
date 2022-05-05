@@ -20,5 +20,4 @@ spec:
                   image: hidan/python-microservices-article-marketplace:0.1
                   env:
                       - name: RECOMMENDATIONS_HOST
-                        value: recommendations
-                        
+                        value: recommendations              

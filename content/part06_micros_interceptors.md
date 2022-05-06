@@ -38,3 +38,8 @@ class RecommendationService(recommendations_pb2_grpc.RecommendationsServicer):
 Ter essa pilha de decoradores em cada método é feio e repetitivo, e viola o [princípio de programação DRY](https://en.wikipedia.org/wiki/Don%27t_repeat_yourself): _Não se Repita_.
 
 Decoradores também são um desafio para escrever, principalmente se aceitam argumentos.
+
+### Interceptores
+
+Há uma abordagem alternativa para o uso de decoradores que você seguirá neste tutorial: o gRPC tem um conceito de **interceptor** que fornece funcionalidade semelhante a um decorador, mas de uma maneira mais limpa.
+ 

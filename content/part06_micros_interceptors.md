@@ -42,4 +42,48 @@ Decoradores também são um desafio para escrever, principalmente se aceitam arg
 ### Interceptores
 
 Há uma abordagem alternativa para o uso de decoradores que você seguirá neste tutorial: o gRPC tem um conceito de **interceptor** que fornece funcionalidade semelhante a um decorador, mas de uma maneira mais limpa.
- 
+
+### Implementando interceptores
+
+Infelizmente, a implementação Python do gRPC tem uma [API bastante complexa para interceptores](https://grpc.github.io/grpc/python/grpc.html#service-side-interceptor). Isso ocorre porque é [incrivelmente flexível](https://github.com/grpc/proposal/blob/master/L13-python-interceptors.md#server-side-implementation). No entanto, existe um pacote [grpc-interceptor](https://pypi.org/project/grpc-interceptor/) para simplificá-los. Para divulgação completa, eu sou o autor.
+
+Adicione-o ao seu arquivo `requirements/requirements.txt` junto com [pytest](https://realpython.com/pytest-python-testing/), que você usará em breve:
+
+```text
+grpc-interceptor ~= 0.12.0
+grpcio-tools ~= 1.30
+pytest ~= 5.4
+```
+
+Em seguida, atualize seu ambiente virtual:
+
+```shell
+$ python -m pip install recommendations/requirements.txt
+```
+
+Agora você pode criar um interceptor com o código a seguir. Você não precisa adicionar isso ao seu projeto, pois é apenas um exemplo:
+
+```python
+from grpc_interceptor import ServerInterceptor
+
+class ErrorLogger(ServerInterceptor):
+    def intercept(self, method, request, context, method_name):
+        try:
+            return method(request, context)
+        except Exception as e:
+            self.log_error(e)
+            raise
+
+    def log_error(self, e: Exception) -> None:
+        # ...
+```
+
+Isso chamará log_error() sempre que uma exceção não tratada em seu microsserviço for chamada. Você pode implementar isso, por exemplo, registrando exceções no Sentry para receber alertas e informações de depuração quando elas ocorrerem.
+
+Para usar este interceptor, você o passaria para grpc.server() assim:
+
+```python
+interceptors = [ErrorLogger()]
+server = grpc.server(futures.ThreadPoolExecutor(max_workers=10),
+                     interceptors=interceptors)
+```

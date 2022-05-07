@@ -8,14 +8,16 @@ from recommendations_pb2 import (
     BookRecommendation,
     RecommendationResponse,
 )
+from grpc_interceptor import ExceptionToStatusInterceptor
+from grpc_interceptor.exceptions import NotFound
 
 
 class RecommendationService(
     recommendations_pb2_grpc.RecommendationsServicer
 ):
-    def Recommend(self, request, context):
+    def Recommend(self, request):
         if request.category not in books_by_category:
-            context.abort(grpc.StatusCode.NOT_FOUND, "Category not found")
+            raise NotFound("Category not found")
 
         books_for_category = books_by_category[request.category]
         num_results = min(request.max_results, len(books_for_category))
@@ -26,10 +28,12 @@ class RecommendationService(
         return RecommendationResponse(recommendations=books_to_recommend)
 
     def serve():
-        server = grpc.server(futures.ThreadPoolExecutor(max_workers=10))
-        recommendations_pb2_grpc.add_RecommendationsServicer_to_server(
-            RecommendationService(), server
+        interceptors = [ExceptionToStatusInterceptor()]
+        server = grpc.server(
+            futures.ThreadPoolExecutor(max_workers=10),
+            interceptors=interceptors
         )
+        
         server.add_insecure_port("[::]:50051")
         server.start()
         server.wait_for_termination()

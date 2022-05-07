@@ -87,3 +87,38 @@ interceptors = [ErrorLogger()]
 server = grpc.server(futures.ThreadPoolExecutor(max_workers=10),
                      interceptors=interceptors)
 ```
+
+Com esse código, todas as solicitações e respostas do microsserviço Python passarão pelo interceptor, para que você possa contar quantas solicitações e erros ele recebe.
+
+grpc-interceptor também fornece uma exceção para cada código de status gRPC e um interceptor chamado `ExceptionToStatusInterceptor`. Se uma das exceções for levantada pelo microsserviço,
+então `ExceptionToStatusInterceptor` definirá o código de status gRPC. Isso permite que você simplifique seu microsserviço fazendo as alterações destacadas abaixo em `recommendations/recommendations.py`:
+
+```python
+from grpc_interceptor import ExceptionToStatusInterceptor
+from grpc_interceptor.exceptions import NotFound
+
+# ...
+
+class RecommendationService(
+    recommendations_pb2_grpc.RecommendationsServicer
+):
+    def Recommend(self, request, context):
+        if request.category not in books_by_category:
+            raise NotFound("Category not found")
+
+        books_for_category = books_by_category[request.category]
+        num_results = min(request.max_results, len(books_for_category))
+        books_to_recommend = random.sample(books_for_category, num_results)
+
+        return RecommendationResponse(recommendations=books_to_recommend)
+
+def serve():
+    interceptors = [ExceptionToStatusInterceptor()]
+    server = grpc.server(
+        futures.ThreadPoolExecutor(max_workers=10),
+        interceptors=interceptors
+    )
+    # ...
+```
+
+Isso é mais legível. Você também pode gerar a exceção de muitas funções na pilha de chamadas em vez de ter que passar o contexto para poder chamar `context.abort()`. Você também não precisa capturar a exceção em seu microsserviço – o interceptor irá pegá-la para você.

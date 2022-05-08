@@ -31,3 +31,7 @@ Seguindo essas convenções, você pode evitar fazer alterações importantes. D
 Isso cabe a você decidir, mas esteja ciente de que fazer alterações importantes requer implantações coordenadas de clientes e microsserviços, e isso complica as reversões.
 
 Isso pode ser bom muito cedo no ciclo de vida de um microsserviço, quando não há clientes de produção. No entanto, é bom adquirir o hábito de fazer apenas mudanças ininterruptas, uma vez que seu microsserviço é fundamental para a saúde de sua empresa.
+
+### Protobuf Linting
+
+Uma maneira de garantir que você não faça alterações significativas em seus protobufs é usar um **linter**. Um popular é [`buf`](https://buf.build/docs/introduction). Você pode configurar isso como parte do seu [sistema de CI](https://en.wikipedia.org/wiki/Continuous_integration) para verificar as alterações importantes nas solicitações pull.

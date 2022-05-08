@@ -1,6 +1,4 @@
 git add -A
-git commit -m "Next Step: Best Practices | (add interceptor.py)"
+git commit -m "Next Sub-Step: Protobuf Versioning"
 git push -u origin main
 git status
-
-# go to link: https://realpython.com/python-microservices-grpc/#testing-interceptors

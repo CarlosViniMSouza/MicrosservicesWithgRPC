@@ -122,3 +122,17 @@ Você aprenderá duas maneiras de configurar o TLS:
 2. A maneira mais complexa, com TLS mútuo, na qual o cliente e o servidor se validam.
 
 Em ambos os casos, o tráfego é criptografado.
+
+### -> Noções básicas de TLS
+
+Antes de mergulhar, aqui está uma breve visão geral do TLS: Normalmente, um cliente valida um servidor. Por exemplo, quando você visita a Amazon.com, seu navegador valida que é realmente Amazon.com e não um impostor. Para fazer isso, o cliente deve receber algum tipo de garantia de um terceiro confiável, mais ou menos como você pode confiar em uma nova pessoa apenas se tiver um amigo em comum que ateste por ela.
+
+Com o TLS, o cliente deve confiar em uma **autoridade de certificação (CA)**. A CA assinará algo mantido pelo servidor para que o cliente possa verificar. Isso é um pouco como seu amigo em comum assinando uma nota e você reconhecendo a caligrafia dele. Para obter mais informações, consulte [Como funciona a segurança da Internet: TLS, SSL e CA](https://opensource.com/article/19/11/internet-security-tls-ssl-certificate-authority).
+
+Seu navegador confia implicitamente em algumas CAs, que normalmente são empresas como GoDaddy, DigiCert ou Verisign. Outras empresas, como a Amazon, pagam uma CA para assinar um certificado digital para que seu navegador confie nelas.
+
+Normalmente, a CA verificaria se a Amazon é proprietária da Amazon.com antes de assinar seu certificado. Dessa maneira, um impostor não teria uma assinatura em um certificado da Amazon.com e seu navegador bloquearia o site.
+
+Com microsserviços, você não pode realmente pedir a uma CA para assinar um certificado porque seus microsserviços são executados em máquinas internas. A CA provavelmente ficaria feliz em assinar um certificado e cobrar por isso, mas o ponto é que não é prático. 
+
+Nesse caso, sua empresa pode atuar como sua própria CA. O cliente gRPC confiará no servidor se tiver um certificado assinado por sua empresa ou por você se estiver fazendo um projeto pessoal.

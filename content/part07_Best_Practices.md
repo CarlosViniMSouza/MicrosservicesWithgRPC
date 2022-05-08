@@ -101,3 +101,24 @@ Aqui está um desdobramento:
 &nbsp; &nbsp; ° A **linha 17** registra seu manipulador.
 
 Quando você implanta uma nova versão do seu microsserviço, o Kubernetes envia sinais para encerrar o microsserviço existente. Lidar com eles para encerrar normalmente garantirá que uma solicitação não seja descartada.
+
+### Protegendo Canais
+
+Até agora, você tem usado canais gRPC inseguros. Isso significa algumas coisas:
+
+1. O cliente não pode confirmar que está enviando solicitações para o servidor pretendido. Alguém poderia criar um microsserviço impostor e injetá-lo em algum lugar para o qual o cliente pudesse enviar uma solicitação. Por exemplo,
+eles podem injetar o microsserviço em um pod para o qual o balanceador de carga enviaria solicitações.
+
+2. O servidor não pode confirmar que o cliente está enviando solicitações para ele. Contanto que alguém possa se conectar ao servidor, ele poderá enviar solicitações arbitrárias de gRPC.
+
+3. O tráfego não é criptografado, portanto, qualquer nó que roteie o tráfego também pode visualizá-lo.
+
+Esta seção descreverá como adicionar autenticação e criptografia [TLS](https://en.wikipedia.org/wiki/Transport_Layer_Security).
+
+Você aprenderá duas maneiras de configurar o TLS:
+
+1. A maneira direta, na qual o cliente pode validar o servidor, mas o servidor não valida o cliente.
+
+2. A maneira mais complexa, com TLS mútuo, na qual o cliente e o servidor se validam.
+
+Em ambos os casos, o tráfego é criptografado.

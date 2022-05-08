@@ -35,3 +35,26 @@ Isso pode ser bom muito cedo no ciclo de vida de um microsserviço, quando não 
 ### Protobuf Linting
 
 Uma maneira de garantir que você não faça alterações significativas em seus protobufs é usar um **linter**. Um popular é [`buf`](https://buf.build/docs/introduction). Você pode configurar isso como parte do seu [sistema de CI](https://en.wikipedia.org/wiki/Continuous_integration) para verificar as alterações importantes nas solicitações pull.
+
+### Verificação de tipo de código gerado pelo Protobuf
+
+Mypy é um projeto para verificação de tipo estático de código Python. Se você é novo na verificação de tipo estático em Python, então você pode ler [Python Type Checking](https://realpython.com/python-type-checking/#static-type-checking) para aprender tudo sobre isso.
+
+O código gerado pelo protoc é um pouco complicado e não possui anotações de tipo. Se você tentar digitar, verifique com o Mypy,
+então você receberá muitos erros e não detectará erros reais, como nomes de campos com erros ortográficos. Felizmente, as pessoas legais do Dropbox escreveram um [plugin](https://github.com/dropbox/mypy-protobuf) para o compilador protoc gerar stubs de tipo. Eles não devem ser confundidos com stubs gRPC.
+
+Para usá-lo, você pode instalar o pacote `mypy-protobuf` e atualizar o comando para gerar a saída do protobuf. Observe a nova opção `‑‑mypy_out`:
+
+```shell
+$ python -m grpc_tools.protoc -I ../protobufs --python_out=. \
+         --grpc_python_out=. --mypy_out=. ../protobufs/recommendations.proto
+```
+
+A maioria dos seus erros do Mypy devem desaparecer. Você ainda pode receber um erro sobre o pacote grpc não ter informações de tipo. Você pode instalar [stubs do tipo gRPC](https://pypi.org/project/grpc-stubs/) não oficiais ou adicionar o seguinte à sua configuração do Mypy:
+
+```config
+[mypy-grpc.*]
+ignore_missing_imports = True
+```
+
+Você ainda terá a maioria dos benefícios da verificação de tipo, como capturar campos com erros ortográficos. Isso é realmente útil para capturar bugs antes que eles cheguem à produção.

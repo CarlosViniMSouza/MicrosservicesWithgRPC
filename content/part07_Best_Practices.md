@@ -58,3 +58,46 @@ ignore_missing_imports = True
 ```
 
 Você ainda terá a maioria dos benefícios da verificação de tipo, como capturar campos com erros ortográficos. Isso é realmente útil para capturar bugs antes que eles cheguem à produção.
+
+### Desligando graciosamente
+
+Ao executar seu microsserviço em sua máquina de desenvolvimento, você pode pressionar `^Ctrl` + `C` para interrompê-lo. Isso fará com que o interpretador Python gere uma exceção `KeyboardInterrupt`.
+
+Quando o Kubernetes estiver executando seu microsserviço e precisar interrompê-lo para lançar uma atualização, ele enviará um sinal ao seu microsserviço. Especificamente, ele enviará um sinal SIGTERM e aguardará trinta segundos. Se o seu microsserviço não tiver saído até então, ele enviará um sinal `SIGKILL`.
+
+Você pode, e deve, capturar e manipular o `SIGTERM` para que você possa terminar de processar as solicitações atuais, mas recusar as novas. Você pode fazer isso colocando o seguinte código em serve():
+
+```python
+from signal import signal, SIGTERM
+
+...
+
+def serve():
+    server = grpc.server(futures.ThreadPoolExecutor(max_workers=10))
+    ...
+    server.add_insecure_port("[::]:50051")
+    server.start()
+
+    def handle_sigterm(*_):
+        print("Received shutdown signal")
+        all_rpcs_done_event = server.stop(30)
+        all_rpcs_done_event.wait(30)
+        print("Shut down gracefully")
+
+    signal(SIGTERM, handle_sigterm)
+    server.wait_for_termination()
+```
+
+Aqui está um desdobramento:
+
+&nbsp; &nbsp; ° A **linha 1** importa o `signal`, que permite capturar e manipular sinais do Kubernetes ou de quase qualquer outro processo.
+
+&nbsp; &nbsp; ° A **linha 11** define uma função para manipular `SIGTERM`. A função será chamada quando o Python receber o sinal `SIGTERM` e o Python passará dois argumentos. Você não precisa dos argumentos, no entanto, então use *_ para ignorá-los.
+
+&nbsp; &nbsp; ° A **linha 13** chama server.stop(30) para encerrar o servidor normalmente. Ele recusará novas solicitações e aguardará 30 segundos para que as solicitações atuais sejam concluídas. Ele retorna imediatamente, mas retorna um objeto `threading.Event` no qual você pode esperar.
+
+&nbsp; &nbsp; ° A **linha 14** aguarda o objeto `Event` para que o Python não saia prematuramente.
+
+&nbsp; &nbsp; ° A **linha 17** registra seu manipulador.
+
+Quando você implanta uma nova versão do seu microsserviço, o Kubernetes envia sinais para encerrar o microsserviço existente. Lidar com eles para encerrar normalmente garantirá que uma solicitação não seja descartada.

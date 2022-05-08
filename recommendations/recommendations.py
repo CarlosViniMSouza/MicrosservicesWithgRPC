@@ -8,8 +8,8 @@ from recommendations_pb2 import (
     BookRecommendation,
     RecommendationResponse,
 )
-from grpc_interceptor import ExceptionToStatusInterceptor
 from grpc_interceptor.exceptions import NotFound
+from signal import signal, SIGTERM
 
 
 class RecommendationService(
@@ -28,14 +28,17 @@ class RecommendationService(
         return RecommendationResponse(recommendations=books_to_recommend)
 
     def serve():
-        interceptors = [ExceptionToStatusInterceptor()]
-        server = grpc.server(
-            futures.ThreadPoolExecutor(max_workers=10),
-            interceptors=interceptors
-        )
-        
+        server = grpc.server(futures.ThreadPoolExecutor(max_workers=10))
         server.add_insecure_port("[::]:50051")
         server.start()
+
+        def handle_sigterm(*_):
+            print("Received shutdown signal")
+            all_rpcs_done_event = server.stop(30)
+            all_rpcs_done_event.wait(30)
+            print("Shut down gracefully")
+
+        signal(SIGTERM, handle_sigterm)
         server.wait_for_termination()
 
 

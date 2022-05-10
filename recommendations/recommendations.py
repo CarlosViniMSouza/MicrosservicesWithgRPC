@@ -39,6 +39,15 @@ class RecommendationService(
         with open("server.pem", "rb") as fp:
             server_cert = fp.read()
 
+        with open("ca.pem", "rb") as fp:
+            ca_cert = fp.read()
+
+        creds = grpc.ssl_server_credentials(
+            [(server_key, server_cert)],
+            root_certificates=ca_cert,
+            require_client_auth=True,
+        )
+
         creds = grpc.ssl_server_credentials([(server_key, server_cert)])
         
         server.add_secure_port("[::]:443", creds)

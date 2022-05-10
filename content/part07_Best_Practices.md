@@ -297,3 +297,91 @@ networks:
 ```
 
 Agora você está criptografando o tráfego e verificando se está se conectando ao servidor correto.
+
+### -> Autenticação mútua
+
+O servidor agora prova que pode ser confiável, mas o cliente não. Felizmente, o TLS permite a verificação de ambos os lados. Atualize o `Dockerfile` do Marketplace conforme destacado:
+
+```Dockerfile
+# syntax = docker/dockerfile:1.0-experimental
+# DOCKER_BUILDKIT=1 docker build . -f marketplace/Dockerfile \
+#                     -t marketplace --secret id=ca.key,src=ca.key
+
+FROM python
+
+RUN mkdir /service
+COPY protobufs/ /service/protobufs/
+COPY marketplace/ /service/marketplace/
+COPY ca.pem /service/marketplace/
+
+WORKDIR /service/marketplace
+RUN python -m pip install -r requirements.txt
+RUN python -m grpc_tools.protoc -I ../protobufs --python_out=. \
+           --grpc_python_out=. ../protobufs/recommendations.proto
+RUN openssl req -nodes -newkey rsa:4096 -subj /CN=marketplace \
+                -keyout client.key -out client.csr
+RUN --mount=type=secret,id=ca.key \
+    openssl x509 -req -in client.csr -CA ca.pem -CAkey /run/secrets/ca.key \
+                 -set_serial 1 -out client.pem
+
+EXPOSE 5000
+ENV FLASK_APP=marketplace.py
+ENTRYPOINT [ "flask", "run", "--host=0.0.0.0"]
+```
+
+Essas alterações são semelhantes às que você fez para o microsserviço de recomendações na seção anterior.
+
+Atualize `serve()` em `recommendations.py` para autenticar o cliente conforme destacado:
+
+```python
+def serve():
+    server = grpc.server(futures.ThreadPoolExecutor(max_workers=10))
+    recommendations_pb2_grpc.add_RecommendationsServicer_to_server(
+        RecommendationService(), server
+    )
+
+    with open("server.key", "rb") as fp:
+        server_key = fp.read()
+    with open("server.pem", "rb") as fp:
+        server_cert = fp.read()
+    with open("ca.pem", "rb") as fp:
+        ca_cert = fp.read()
+
+    creds = grpc.ssl_server_credentials(
+        [(server_key, server_cert)],
+        root_certificates=ca_cert,
+        require_client_auth=True,
+    )
+    server.add_secure_port("[::]:443", creds)
+    server.start()
+    server.wait_for_termination()
+```
+
+Isso carrega o certificado CA e requer autenticação de cliente.
+
+Por fim, atualize `marketplace.py` para enviar seu certificado ao servidor conforme destacado:
+
+```python
+recommendations_host = os.getenv("RECOMMENDATIONS_HOST", "localhost")
+
+with open("client.key", "rb") as fp:
+    client_key = fp.read()
+
+with open("client.pem", "rb") as fp:
+    client_cert = fp.read()
+
+with open("ca.pem", "rb") as fp:
+    ca_cert = fp.read()
+
+creds = grpc.ssl_channel_credentials(ca_cert, client_key, client_cert)
+recommendations_channel = grpc.secure_channel(
+    f"{recommendations_host}:443", creds
+)
+recommendations_client = RecommendationsStub(recommendations_channel)
+```
+
+Isso carrega os certificados e os envia ao servidor para verificação.
+
+Agora, se você tentar se conectar ao servidor com outro cliente, mesmo usando TLS, mas com um certificado desconhecido, o servidor o rejeitará com o erro `PEER_DID_NOT_RETURN_A_CERTIFICATE`.
+
+Isso encerra a segurança da comunicação entre microsserviços. A seguir, você aprenderá a usar o AsyncIO com microsserviços.

@@ -136,3 +136,77 @@ Normalmente, a CA verificaria se a Amazon é proprietária da Amazon.com antes d
 Com microsserviços, você não pode realmente pedir a uma CA para assinar um certificado porque seus microsserviços são executados em máquinas internas. A CA provavelmente ficaria feliz em assinar um certificado e cobrar por isso, mas o ponto é que não é prático. 
 
 Nesse caso, sua empresa pode atuar como sua própria CA. O cliente gRPC confiará no servidor se tiver um certificado assinado por sua empresa ou por você se estiver fazendo um projeto pessoal.
+
+### -> Autenticação do servidor
+
+O comando a seguir criará um certificado CA que pode ser usado para assinar o certificado de um servidor:
+
+```shell
+$ openssl req -x509 -nodes -newkey rsa:4096 -keyout ca.key -out ca.pem \
+              -subj /O=me
+```
+
+Isso produzirá dois arquivos:
+
+1. **ca.key** é uma chave privada.
+
+2. **ca.pem** é um certificado público.
+
+Você pode então criar um certificado para seu servidor e assiná-lo com seu certificado de CA:
+
+```shell
+$ openssl req -nodes -newkey rsa:4096 -keyout server.key -out server.csr \
+              -subj /CN=recommendations
+$ openssl x509 -req -in server.csr -CA ca.pem -CAkey ca.key -set_serial 1 \
+              -out server.pem
+```
+
+Isso produzirá três novos arquivos:
+
+1. **server.key** é a chave privada do servidor.
+
+2. **server.csr** é um arquivo intermediário.
+
+3. **server.pem** é o certificado público do servidor.
+
+Você pode adicionar isso ao Dockerfile do microsserviço de recomendações. É muito difícil adicionar segredos a uma imagem do Docker com segurança, mas há uma maneira de fazer isso com as versões mais recentes do Docker, mostradas destacadas abaixo:
+
+```Dockerfile
+# syntax = docker/dockerfile:1.0-experimental
+# DOCKER_BUILDKIT=1 docker build . -f recommendations/Dockerfile \
+#                     -t recommendations --secret id=ca.key,src=ca.key
+
+FROM python
+
+RUN mkdir /service
+COPY infra/ /service/infra/
+COPY protobufs/ /service/protobufs/
+COPY recommendations/ /service/recommendations/
+COPY ca.pem /service/recommendations/
+
+WORKDIR /service/recommendations
+RUN python -m pip install --upgrade pip
+RUN python -m pip install -r requirements.txt
+RUN python -m grpc_tools.protoc -I ../protobufs --python_out=. \
+           --grpc_python_out=. ../protobufs/recommendations.proto
+RUN openssl req -nodes -newkey rsa:4096 -subj /CN=recommendations \
+                -keyout server.key -out server.csr
+RUN --mount=type=secret,id=ca.key \
+    openssl x509 -req -in server.csr -CA ca.pem -CAkey /run/secrets/ca.key \
+                 -set_serial 1 -out server.pem
+
+EXPOSE 50051
+ENTRYPOINT [ "python", "recommendations.py" ]
+```
+
+As novas linhas são destacadas. Segue uma explicação:
+
+&nbsp; &nbsp; ° A **linha 1** é necessária para habilitar segredos.
+
+&nbsp; &nbsp; ° As **linhas 2 e 3** mostram o comando de como construir a imagem do Docker.
+
+&nbsp; &nbsp; ° A **linha 11** copia o certificado público da CA na imagem.
+
+&nbsp; &nbsp; ° As **linhas 18 e 19** geram uma nova chave privada e certificado do servidor.
+
+&nbsp; &nbsp; ° As **linhas 20 a 22** carregam temporariamente a chave privada da CA para que você possa assinar o certificado do servidor com ela. No entanto, ele não será mantido na imagem.

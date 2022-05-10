@@ -210,3 +210,90 @@ As novas linhas são destacadas. Segue uma explicação:
 &nbsp; &nbsp; ° As **linhas 18 e 19** geram uma nova chave privada e certificado do servidor.
 
 &nbsp; &nbsp; ° As **linhas 20 a 22** carregam temporariamente a chave privada da CA para que você possa assinar o certificado do servidor com ela. No entanto, ele não será mantido na imagem.
+
+Sua imagem agora terá os seguintes arquivos:
+
+&nbsp; &nbsp; ° `ca.pem`
+
+&nbsp; &nbsp; ° `servidor.csr`
+
+&nbsp; &nbsp; ° `server.key`
+
+&nbsp; &nbsp; ° `server.pem`
+
+Agora você pode atualizar `serve()` em `recommendations.py` conforme destacado:
+
+```python
+def serve():
+    server = grpc.server(futures.ThreadPoolExecutor(max_workers=10))
+    recommendations_pb2_grpc.add_RecommendationsServicer_to_server(
+        RecommendationService(), server
+    )
+
+    with open("server.key", "rb") as fp:
+        server_key = fp.read()
+
+    with open("server.pem", "rb") as fp:
+        server_cert = fp.read()
+
+    creds = grpc.ssl_server_credentials([(server_key, server_cert)])
+
+    server.add_secure_port("[::]:443", creds)
+    server.start()
+    server.wait_for_termination()
+```
+
+Aqui estão as mudanças:
+
+&nbsp; &nbsp; ° As **linhas 7 a 10** carregam a chave privada e o certificado do servidor.
+
+&nbsp; &nbsp; ° As **linhas 12 e 13** executam o servidor usando TLS. Ele aceitará apenas conexões criptografadas por TLS agora.
+
+Você precisará atualizar `marketplace.py` para carregar o certificado CA. Você só precisa do certificado público no cliente por enquanto, conforme destacado:
+
+```python
+recommendations_host = os.getenv("RECOMMENDATIONS_HOST", "localhost")
+
+with open("ca.pem", "rb") as fp:
+    ca_cert = fp.read()
+
+creds = grpc.ssl_channel_credentials(ca_cert)
+recommendations_channel = grpc.secure_channel(
+    f"{recommendations_host}:443", creds
+)
+recommendations_client = RecommendationsStub(recommendations_channel)
+```
+
+Você também precisará adicionar COPY `ca.pem /service/marketplace/` ao `Dockerfile` do Marketplace.
+
+Agora você pode executar o cliente e o servidor com criptografia e o cliente validará o servidor. Para simplificar a execução de tudo, você pode usar o `docker-compose`. No entanto, no momento da redação deste artigo, o `docker-compose` não suportava segredos de compilação. Você terá que compilar as imagens do Docker manualmente em vez de com a `docker-compose build`.
+
+No entanto, você ainda pode executar o `docker-compose up`. Atualize o arquivo `docker-compose.yaml` para remover as seções de compilação:
+
+```yaml
+version: "3.8"
+services:
+
+    marketplace:
+        environment:
+            RECOMMENDATIONS_HOST: recommendations
+        # DOCKER_BUILDKIT=1 docker build . -f marketplace/Dockerfile \
+        #                   -t marketplace --secret id=ca.key,src=ca.key
+        image: marketplace
+        networks:
+            - microservices
+        ports:
+            - 5000:5000
+
+    recommendations:
+        # DOCKER_BUILDKIT=1 docker build . -f recommendations/Dockerfile \
+        #                   -t recommendations --secret id=ca.key,src=ca.key
+        image: recommendations
+        networks:
+            - microservices
+
+networks:
+    microservices:
+```
+
+Agora você está criptografando o tráfego e verificando se está se conectando ao servidor correto.

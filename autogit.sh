@@ -1,5 +1,5 @@
 git add -A
-git commit -m "Next Sub-Sub-Step: Server Authentication (Part2) | Dockerfile from recommendations folder -> updated"
+git commit -m "Next Sub-Sub-Step: Mutual Authentication | added docker-compose.yaml"
 git push -u origin main
 git status
 

@@ -29,16 +29,20 @@ class RecommendationService(
 
     def serve():
         server = grpc.server(futures.ThreadPoolExecutor(max_workers=10))
-        server.add_insecure_port("[::]:50051")
+        recommendations_pb2_grpc.add_RecommendationsServicer_to_server(
+            RecommendationService(), server
+        )
+
+        with open("server.key", "rb") as fp:
+            server_key = fp.read()
+
+        with open("server.pem", "rb") as fp:
+            server_cert = fp.read()
+
+        creds = grpc.ssl_server_credentials([(server_key, server_cert)])
+        
+        server.add_secure_port("[::]:443", creds)
         server.start()
-
-        def handle_sigterm(*_):
-            print("Received shutdown signal")
-            all_rpcs_done_event = server.stop(30)
-            all_rpcs_done_event.wait(30)
-            print("Shut down gracefully")
-
-        signal(SIGTERM, handle_sigterm)
         server.wait_for_termination()
 
 

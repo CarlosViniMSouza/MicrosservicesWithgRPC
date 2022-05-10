@@ -11,6 +11,14 @@ recommendations_host = os.getenv(
     "RECOMMENDATIONS_HOST", 
     "localhost"
 )
+
+with open("ca.pem", "rb") as fp:
+    ca_cert = fp.read()
+
+creds = grpc.ssl_channel_credentials(ca_cert)
+recommendations_channel = grpc.secure_channel(
+    f"{recommendations_host}:443", creds
+)
 recommendations_channel = grpc.insecure_channel(
     f"{recommendations_host}:50051"
 )

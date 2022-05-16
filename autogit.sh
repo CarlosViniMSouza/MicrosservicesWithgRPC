@@ -1,5 +1,5 @@
 git add -A
-git commit -m "Next Step: AsyncIO and gRPC"
+git commit -m "part00.md -> alts add"
 git push -u origin main
 git status
 

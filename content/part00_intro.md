@@ -6,10 +6,10 @@ Para se beneficiar ao máximo deste tutorial, você deve entender o [básico do 
 
 **Ao final deste tutorial, você será capaz de:**
 
-° Implemente **microsserviços** em Python que se comunicam entre si por gRPC
+&nbsp; &nbsp; ° Implemente **microsserviços** em Python que se comunicam entre si por gRPC
 
-° Implementar **middleware** para monitorar microsserviços
+&nbsp; &nbsp; ° Implementar **middleware** para monitorar microsserviços
 
-° **Teste de unidade** e **teste de integração** seus microsserviços e middleware
+&nbsp; &nbsp; ° **Teste de unidade** e **teste de integração** seus microsserviços e middleware
 
-° Implante microsserviços em um ambiente de produção Python com **Kubernetes**
+&nbsp; &nbsp; ° Implante microsserviços em um ambiente de produção Python com **Kubernetes**
